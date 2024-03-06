@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: lego4j
+  labels:
+    app: lego4j
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: lego4j
+  template:
+    metadata:
+      name: lego4j
+      labels:
+        app: lego4j
+    spec:
+      containers:
+        - name: lego4j
+          image: neo4j
+          imagePullPolicy: IfNotPresent
+          volumeMounts:
+            - mountPath: /data
+              name: lego4j-data-storage
+          env:
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: lego4j-credentials
+                  key: user
+            - name: DB_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: lego4j-credentials
+                  key: pass
+            - name: NEO4J_AUTH
+              value: $(DB_USER)/$(DB_PASS)
+            - name: NEO4J_PLUGINS
+              value: '["apoc"]'
+      volumes:
+        - name: lego4j-data-storage
+          persistentVolumeClaim:
+            claimName: lego4j-data-claim
+      restartPolicy: Always
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: lego4j-data-claim
+spec:
+  storageClassName: local-storage
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi

@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: data-provider-server
+  labels:
+    app: data-provider-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: data-provider-server
+  template:
+    metadata:
+      name: data-provider-server
+      labels:
+        app: data-provider-server
+    spec:
+      containers:
+        - name: data-provider-server
+          image: indyteo/data-provider
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: DB_URL
+              valueFrom:
+                secretKeyRef:
+                  name: lego4j-credentials
+                  key: url
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: lego4j-credentials
+                  key: user
+            - name: DB_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: lego4j-credentials
+                  key: pass
+            - name: WEB_SERVER_PORT
+              value: "80"
+      restartPolicy: Always
