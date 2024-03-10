@@ -1,5 +1,6 @@
-import neo4j from "neo4j-driver";
+import neo4j, { ManagedTransaction, RecordShape, Result, Session } from "neo4j-driver";
 import exitHook from "async-exit-hook";
+import { Neo4jStats } from "../types/neo4j";
 
 const url = process.env.DB_URL;
 const user = process.env.DB_USER;
@@ -14,8 +15,24 @@ export const driver = neo4j.driver(
   { disableLosslessIntegers: true }
 );
 
-export function openDatabaseSession() {
+export function openDatabaseSession(): Session {
   return driver.session();
+}
+
+export async function runInDatabaseSession<T = void>(runnable: (session: Session) => Promise<T>): Promise<T> {
+  const session = openDatabaseSession();
+  try {
+    return await runnable(session);
+  } finally {
+    await session.close();
+  }
+}
+
+export async function writeDatabase(runnable: (tx: ManagedTransaction) => Result<RecordShape>): Promise<Neo4jStats> {
+  return runInDatabaseSession(async session => {
+    const res = await session.executeWrite(runnable);
+    return res.summary.counters.updates();
+  });
 }
 
 exitHook.uncaughtExceptionHandler(err => {

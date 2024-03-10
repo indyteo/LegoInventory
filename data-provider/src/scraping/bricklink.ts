@@ -1,50 +1,54 @@
 import { scrap, ScrapableElement } from "./scraping";
 import { getInstructions, legoIdFromBrickLinkId } from "./lego";
+import {
+  CatalogItem,
+  CatalogItemIdentifier,
+  Category,
+  Color,
+  ElementType,
+  elementTypeDisplay,
+  QuantifiedElement
+} from "../types";
 
-export type ElementType = "S" | "M";
+let colors: Color[];
 
-export interface BaseElement {
-  id: string;
-  name: string;
-  link: string;
-  icon: string;
+export async function getColors(forceFetch: boolean = false): Promise<Color[]> {
+  if (forceFetch || colors === undefined)
+    colors = await fetchColors();
+  return colors;
 }
 
-export interface CatalogItem extends BaseElement {
-  image: string;
-  source: string;
-  type: ElementType;
-  instructions: string | null;
-  category: Category["id"];
-  bricks: Brick[];
-  minifigures: Minifigure[];
-}
-
-export interface QuantifiedElement extends BaseElement {
-  quantity: number;
-}
-
-export interface Brick extends QuantifiedElement {
-  image: string;
-  color: Color["id"];
-}
-
-export interface Minifigure extends QuantifiedElement {
-  image: string;
-}
-
-export interface Color {
-  id: number;
-  name: string;
-  value: number;
-  type: string;
-}
-
-export interface Category {
-  id: string;
-  name: string;
-  link: string;
-  parent: Category["id"] | null;
+export async function recursivelyFetchCatalogItems(...identifiers: CatalogItemIdentifier[]): Promise<CatalogItem[]> {
+  console.group();
+  const items = [];
+  for (const { type, id } of identifiers) {
+    console.log(`Scraping catalog item ${id} (${elementTypeDisplay[type]})`);
+    const element = await getCatalogItem(type, id);
+    if (element === null)
+      console.warn(`Unable to scrap catalog item ${id} (${elementTypeDisplay[type]}). Skipping!`);
+    else {
+      items.push(element);
+      if (type === "S") {
+        console.log(`Scraped set "${element.name}" with ${element.bricks.length} bricks and ${element.minifigures.length} minifigures`);
+        console.log("Scraping set's minifigures")
+        console.group();
+        for (const minifigure of element.minifigures) {
+          console.log(`Scraping minifigure ${minifigure.id}`);
+          const item = await getCatalogItem("M", minifigure.id);
+          if (item === null)
+            console.warn(`Unable to scrap minifigure ${minifigure.id}. Skipping!`);
+          else {
+            items.push(item);
+            console.log(`Scraped minifigure "${item.name}" with ${item.bricks.length} pieces`);
+          }
+        }
+        console.groupEnd();
+      } else
+        console.log(`Scraped minifigure "${element.name}" with ${element.bricks.length} pieces`);
+    }
+  }
+  console.groupEnd();
+  return items;
 }
 
 export async function getCatalogItem(type: ElementType, id: string): Promise<CatalogItem | null> {
@@ -106,7 +110,7 @@ function parseElement(element: ScrapableElement): QuantifiedElement {
   return { id, name, quantity, link, icon };
 }
 
-export async function getColors(): Promise<Color[]> {
+async function fetchColors(): Promise<Color[]> {
   const page = await scrap("https://www.bricklink.com/catalogColors.asp");
   return page.getElements("//html/body/div[2]/center/table/tbody/tr/td/table[position()>1 and @cellspacing=\"0\"]/tbody/tr/td/center/table/tbody/tr[position()>1]").map(color => ({
     id: color.getInteger("./td[1]/font"),

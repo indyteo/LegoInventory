@@ -60,5 +60,5 @@ export async function getInstructions(id: string): Promise<string | null> {
 }
 
 export function legoIdFromBrickLinkId(id: string): string {
-  return id.split("-", 2)[0];
+  return id.split("-", 1)[0];
 }

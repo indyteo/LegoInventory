@@ -1,7 +1,8 @@
-import { Node, Relationship } from "neo4j-driver";
+import { Node, QueryStatistics, Relationship } from "neo4j-driver";
 import { RequiredFields } from "./utils";
 
 export type Neo4jID = number;
+export type Neo4jStats = ReturnType<QueryStatistics["updates"]>;
 
 export type Color = Node<Neo4jID, {
   id: number;
