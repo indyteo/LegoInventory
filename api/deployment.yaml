@@ -1,19 +1,23 @@
-apiVersion: batch/v1
-kind: Job
+apiVersion: apps/v1
+kind: Deployment
 metadata:
-  name: data-provider-init
+  name: api
   labels:
-    app: data-provider-init
+    app: api
 spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: api
   template:
     metadata:
-      name: data-provider-init
+      name: api
       labels:
-        app: data-provider-init
+        app: api
     spec:
       containers:
-        - name: data-provider-init
-          image: lego-inventory/data-provider
+        - name: api
+          image: lego-inventory/api
           imagePullPolicy: IfNotPresent
           env:
             - name: DB_URL
@@ -31,6 +35,6 @@ spec:
                 secretKeyRef:
                   name: lego4j-credentials
                   key: pass
-            - name: INITIAL_CATALOG_ITEMS
-              value: "S:75283-1,S:75310-1,M:sw1113"
-      restartPolicy: Never
+            - name: WEB_SERVER_PORT
+              value: "80"
+      restartPolicy: Always

@@ -133,3 +133,4 @@ dist
 .idea/
 build/
 secret.yaml
+.DS_Store
