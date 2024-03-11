@@ -1,4 +1,4 @@
-import neo4j, { ManagedTransaction, RecordShape, Result, Session } from "neo4j-driver";
+import neo4j, { ManagedTransaction, Record, RecordShape, Result, Session } from "neo4j-driver";
 import exitHook from "async-exit-hook";
 import { Neo4jStats } from "../types/neo4j";
 
@@ -26,6 +26,13 @@ export async function runInDatabaseSession<T = void>(runnable: (session: Session
   } finally {
     await session.close();
   }
+}
+
+export async function readDatabase<T extends RecordShape>(runnable: (tx: ManagedTransaction) => Result<T>): Promise<Record<T>[]> {
+  return runInDatabaseSession(async session => {
+    const res = await session.executeRead(runnable);
+    return res.records;
+  });
 }
 
 export async function writeDatabase(runnable: (tx: ManagedTransaction) => Result<RecordShape>): Promise<Neo4jStats> {

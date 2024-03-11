@@ -1,33 +1,36 @@
 import { Neo4jStats, runInDatabaseSession, writeDatabase } from "shared";
-import { ManagedTransaction } from "neo4j-driver";
+import { Session } from "neo4j-driver";
 import { CatalogItem, Category, Color } from "../types";
 
-export async function createConstraints(): Promise<void> {
+async function createConstraint(session: Session, label: string, id: string): Promise<number> {
+  const name = `${label.toLowerCase()}_${id}`;
+  console.log(`Creating ${name} constraint`);
+  const cypher = `CREATE CONSTRAINT ${name} IF NOT EXISTS FOR (n:${label}) REQUIRE n.${id} IS UNIQUE`;
+  const res = await session.executeWrite(tx => tx.run(cypher));
+  return res.summary.counters.updates().constraintsAdded;
+}
+
+export async function createConstraints(): Promise<number> {
   console.group();
-  await runInDatabaseSession(async session => {
-    console.log("Creating color_id constraint");
-    await session.executeWrite((tx: ManagedTransaction) => tx.run("CREATE CONSTRAINT color_id IF NOT EXISTS FOR (c:Color) REQUIRE c.id IS UNIQUE"));
-    console.log("Creating category_id constraint");
-    await session.executeWrite((tx: ManagedTransaction) => tx.run("CREATE CONSTRAINT category_id IF NOT EXISTS FOR (c:Category) REQUIRE c.id IS UNIQUE"));
-    console.log("Creating element_id constraint");
-    await session.executeWrite((tx: ManagedTransaction) => tx.run("CREATE CONSTRAINT element_id IF NOT EXISTS FOR (e:Element) REQUIRE e.id IS UNIQUE"));
-    console.log("Creating part_id constraint");
-    await session.executeWrite((tx: ManagedTransaction) => tx.run("CREATE CONSTRAINT part_id IF NOT EXISTS FOR (p:Part) REQUIRE p.id IS UNIQUE"));
-    console.log("Creating inventory_id constraint");
-    await session.executeWrite((tx: ManagedTransaction) => tx.run("CREATE CONSTRAINT inventory_id IF NOT EXISTS FOR (i:Inventory) REQUIRE i.id IS UNIQUE"));
+  const constraintsAdded = await runInDatabaseSession(async session => {
+    let count = 0;
+    for (const label of [ "Color", "Category", "Element", "Part", "Inventory" ])
+      count += await createConstraint(session, label, "id");
+    return count;
   });
   console.groupEnd();
+  return constraintsAdded;
 }
 
 export async function createColors(colors: Color[]): Promise<Neo4jStats> {
-  return writeDatabase((tx: ManagedTransaction) => tx.run(
+  return writeDatabase(tx => tx.run(
     "UNWIND $colors AS color MERGE (c:Color { id: toInteger(color.id) }) SET c.name = color.name, c.value = toInteger(color.value), c.type = color.type",
     { colors }
   ));
 }
 
 export async function createCategories(categories: Category[]): Promise<Neo4jStats> {
-  return writeDatabase((tx: ManagedTransaction) => tx.run(
+  return writeDatabase(tx => tx.run(
     `UNWIND $categories AS category
     MERGE (cat:Category { id: category.id })
     SET
@@ -52,7 +55,7 @@ export async function createCatalogItem(item: CatalogItem): Promise<Neo4jStats> 
 }
 
 export async function createCatalogItems(items: CatalogItem[]): Promise<Neo4jStats> {
-  return writeDatabase((tx: ManagedTransaction) => tx.run(
+  return writeDatabase(tx => tx.run(
     `UNWIND $items AS item
     MERGE (e:Element { id: item.id })
     SET
@@ -63,38 +66,44 @@ export async function createCatalogItems(items: CatalogItem[]): Promise<Neo4jSta
       e.instructions = item.instructions,
       e.source = item.source
     WITH e, item
+    // Add label depending on item type
     CALL apoc.create.addLabels(e, [CASE item.type WHEN "S" THEN "Set" WHEN "M" THEN "Minifigure" END]) YIELD node
     MATCH (c:Category { id: item.category })
     MERGE (e)-[:IN_CATEGORY]->(c)
     WITH e, item
+    // Delete parts previously associated with element
     CALL {
       WITH e
       MATCH (p:Part)-[:OF_ELEMENT]->(e)
       DETACH DELETE p
     }
+    // Create bricks parts
     CALL {
       WITH e, item
       UNWIND item.bricks AS brick
       MERGE (b:Element:Brick { id: brick.id })
-      ON CREATE SET
+      ON CREATE SET // Only set those properties on brick creation
         b.link = brick.link,
         b.icon = brick.icon,
         b.image = brick.image
       SET
         b.name = brick.name
-      CREATE (p:Part { id: apoc.create.uuid() })
+      CREATE (p:Part { id: apoc.create.uuid() }) // Part will receive a random ID
       SET p.quantity = toInteger(brick.quantity)
       MERGE (b)-[:IS_PART]->(p)-[:OF_ELEMENT]->(e)
       WITH p, brick, b
-      OPTIONAL MATCH (oc:Color { id: brick.color })
-      UNWIND oc AS c
+      // Optionally link part with color
+      OPTIONAL MATCH (oc:Color { id: brick.color }) // oc is null if color not found
+      UNWIND oc AS c // UNWIND null is equivalent to UNWIND []
       MERGE (p)-[:WITH_COLOR]->(c)
+      // Save link, icon and image in relationship between brick and color directly
       MERGE (b)-[r:PRODUCED_IN]->(c)
       SET
         r.link = brick.link,
         r.icon = brick.icon,
         r.image = brick.image
     }
+    // Create minifigures parts
     CALL {
       WITH e, item
       UNWIND item.minifigures AS minifigure
@@ -104,7 +113,7 @@ export async function createCatalogItems(items: CatalogItem[]): Promise<Neo4jSta
         m.link = minifigure.link,
         m.icon = minifigure.icon,
         m.image = minifigure.image
-      CREATE (p:Part { id: apoc.create.uuid() })
+      CREATE (p:Part { id: apoc.create.uuid() }) // Part will receive a random ID
       SET p.quantity = toInteger(minifigure.quantity)
       MERGE (m)-[:IS_PART]->(p)-[:OF_ELEMENT]->(e)
     }

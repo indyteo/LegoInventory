@@ -20,31 +20,39 @@ export async function getColors(forceFetch: boolean = false): Promise<Color[]> {
 
 export async function recursivelyFetchCatalogItems(...identifiers: CatalogItemIdentifier[]): Promise<CatalogItem[]> {
   console.group();
-  const items = [];
+  const items: CatalogItem[] = [];
   for (const { type, id } of identifiers) {
-    console.log(`Scraping catalog item ${id} (${elementTypeDisplay[type]})`);
-    const element = await getCatalogItem(type, id);
-    if (element === null)
-      console.warn(`Unable to scrap catalog item ${id} (${elementTypeDisplay[type]}). Skipping!`);
+    if (items.some(item => item.type === type && item.id === id))
+      console.log(`Catalog item ${id} (${elementTypeDisplay[type]}) already fetched`);
     else {
-      items.push(element);
-      if (type === "S") {
-        console.log(`Scraped set "${element.name}" with ${element.bricks.length} bricks and ${element.minifigures.length} minifigures`);
-        console.log("Scraping set's minifigures")
-        console.group();
-        for (const minifigure of element.minifigures) {
-          console.log(`Scraping minifigure ${minifigure.id}`);
-          const item = await getCatalogItem("M", minifigure.id);
-          if (item === null)
-            console.warn(`Unable to scrap minifigure ${minifigure.id}. Skipping!`);
-          else {
-            items.push(item);
-            console.log(`Scraped minifigure "${item.name}" with ${item.bricks.length} pieces`);
+      console.log(`Scraping catalog item ${id} (${elementTypeDisplay[type]})`);
+      const element = await getCatalogItem(type, id);
+      if (element === null)
+        console.warn(`Unable to scrap catalog item ${id} (${elementTypeDisplay[type]}). Skipping!`);
+      else {
+        items.push(element);
+        if (type === "S") {
+          console.log(`Scraped set "${element.name}" with ${element.bricks.length} bricks and ${element.minifigures.length} minifigures`);
+          console.log("Scraping set's minifigures")
+          console.group();
+          for (const minifigure of element.minifigures) {
+            if (items.some(item => item.type === "M" && item.id === minifigure.id))
+              console.log(`Minifigure ${minifigure.id} already fetched`);
+            else {
+              console.log(`Scraping minifigure ${minifigure.id}`);
+              const item = await getCatalogItem("M", minifigure.id);
+              if (item === null)
+                console.warn(`Unable to scrap minifigure ${minifigure.id}. Skipping!`);
+              else {
+                items.push(item);
+                console.log(`Scraped minifigure "${item.name}" with ${item.bricks.length} pieces`);
+              }
+            }
           }
-        }
-        console.groupEnd();
-      } else
-        console.log(`Scraped minifigure "${element.name}" with ${element.bricks.length} pieces`);
+          console.groupEnd();
+        } else
+          console.log(`Scraped minifigure "${element.name}" with ${element.bricks.length} pieces`);
+      }
     }
   }
   console.groupEnd();

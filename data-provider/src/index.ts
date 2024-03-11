@@ -26,7 +26,8 @@ async function database() {
   console.log("Initializing Neo4j database...");
   console.group();
   console.log("Creating constraints");
-  await createConstraints();
+  const constraintsAdded = await createConstraints();
+  console.log(`Created ${constraintsAdded} constraints`);
   console.log("Importing colors");
   console.group();
   console.log("Scraping colors");
