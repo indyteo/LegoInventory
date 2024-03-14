@@ -49,3 +49,8 @@ export type IS_SUBCATEGORY_OF = Relationship<Neo4jID, {}, "IS_SUBCATEGORY_OF">;
 export type IN_INVENTORY = Relationship<Neo4jID, {
   quantity: number;
 }, "IN_INVENTORY">;
+export type PRODUCED_IN = Relationship<Neo4jID, {
+  link: string;
+  icon: string;
+  image: string;
+}, "PRODUCED_IN">;

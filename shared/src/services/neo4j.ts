@@ -1,5 +1,4 @@
 import neo4j, { ManagedTransaction, Record, RecordShape, Result, Session } from "neo4j-driver";
-import exitHook from "async-exit-hook";
 import { Neo4jStats } from "../types/neo4j";
 
 const url = process.env.DB_URL;
@@ -28,11 +27,16 @@ export async function runInDatabaseSession<T = void>(runnable: (session: Session
   }
 }
 
-export async function readDatabase<T extends RecordShape>(runnable: (tx: ManagedTransaction) => Result<T>): Promise<Record<T>[]> {
+export async function readDatabaseMany<T extends RecordShape>(runnable: (tx: ManagedTransaction) => Result<T>): Promise<Record<T>[]> {
   return runInDatabaseSession(async session => {
     const res = await session.executeRead(runnable);
     return res.records;
   });
+}
+
+export async function readDatabaseOne<T extends RecordShape>(runnable: (tx: ManagedTransaction) => Result<T>): Promise<Record<T> | null> {
+  const res = await readDatabaseMany(runnable);
+  return res.length === 0 ? null : res[0];
 }
 
 export async function writeDatabase(runnable: (tx: ManagedTransaction) => Result<RecordShape>): Promise<Neo4jStats> {
@@ -42,14 +46,6 @@ export async function writeDatabase(runnable: (tx: ManagedTransaction) => Result
   });
 }
 
-exitHook.uncaughtExceptionHandler(err => {
-  console.error(err);
-});
-
-exitHook.unhandledRejectionHandler(err => {
-  console.error(err);
-});
-
-exitHook(callback => {
-  driver.close().finally(callback);
-});
+export async function closeDatabaseDriver(): Promise<void> {
+  await driver.close();
+}

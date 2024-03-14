@@ -2,6 +2,7 @@ import { getCategories, getColors, recursivelyFetchCatalogItems } from "./scrapi
 import { createCatalogItems, createCategories, createColors, createConstraints } from "./database/neo4j";
 import { startWebServer } from "./webserver/express";
 import { CatalogItemIdentifier, elementTypeDisplay, isElementType } from "./types";
+import { closeDatabaseDriver } from "shared";
 
 function parseCatalogItemIdentifiers(str: string): CatalogItemIdentifier[] {
   const identifiers = [];
@@ -71,11 +72,11 @@ async function database() {
   console.log("Neo4j database initialized!");
 }
 
-async function webserver() {
+async function webserver(): Promise<boolean> {
   const portStr = process.env.WEB_SERVER_PORT;
   if (portStr === undefined) {
     console.log("Skipping web server creation!");
-    return;
+    return true;
   }
   console.log("Starting web server...");
   const port = parseInt(portStr);
@@ -83,15 +84,24 @@ async function webserver() {
     throw new Error(`Invalid web server port (expected: 0 <= port < 65535, given: ${port})`);
   startWebServer(port);
   console.log("Web server started!");
+  return false;
 }
 
 async function main() {
   const start = Date.now();
   await database();
-  await webserver();
+  const canCloseDatabaseDriver = await webserver();
+  if (canCloseDatabaseDriver) {
+    console.log("Closing Neo4j database driver...");
+    await closeDatabaseDriver();
+    console.log("Neo4j database driver closed!")
+  }
   const end = Date.now();
   const time = Math.round((end - start) / 100) / 10;
   console.log(`Done in ${time}s`);
 }
 
-main().catch(console.error);
+main().catch(e => {
+  console.error(e);
+  closeDatabaseDriver().then(() => process.exit(1));
+});

@@ -6,6 +6,7 @@ import { setupBricksHandlers } from "./handlers";
 
 const port = getPort();
 const app = express();
+
 app.use(cors());
 app.use(logBefore);
 

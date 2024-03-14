@@ -1,4 +1,4 @@
-import express from "express";
+import express, { Request } from "express";
 import asyncHandler from "express-async-handler";
 import { ElementType, elementTypeDisplay, isElementType } from "../types";
 import { recursivelyFetchCatalogItems } from "../scraping/bricklink";
@@ -29,9 +29,10 @@ export function startWebServer(port: number) {
       res.sendStatus(400);
   });
 
-  app.post("/element/:elementType/:id", asyncHandler(async (req: express.Request<ElementTypeAndId>, res, next) => {
-    console.log(`Fetching requested ${elementTypeDisplay[req.params.elementType]} ${req.params.id}`);
-    const items = await recursivelyFetchCatalogItems({ type: req.params.elementType, id: req.params.id });
+  app.post("/element/:elementType/:id", asyncHandler(async (req: Request<ElementTypeAndId>, res, next) => {
+    const { elementType: type, id } = req.params;
+    console.log(`Fetching requested ${elementTypeDisplay[type]} ${id}`);
+    const items = await recursivelyFetchCatalogItems({ type, id });
     if (items.length === 0) {
       console.log("Requested item not found");
       res.sendStatus(404);

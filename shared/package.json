@@ -11,11 +11,9 @@
   "author": "indyteo",
   "license": "ISC",
   "dependencies": {
-    "async-exit-hook": "^2.0.1",
     "neo4j-driver": "^5.17.0"
   },
   "devDependencies": {
-    "@types/async-exit-hook": "^2.0.2",
     "@types/node": "^20.11.24",
     "tsx": "^4.7.1",
     "typescript": "^5.3.3"
