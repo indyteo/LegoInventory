@@ -18,8 +18,33 @@ export function startWebServer(port: number) {
     next();
   });
 
-  app.get("/", (_req, res) => {
-    res.sendStatus(200);
+  app.get("/", (_req, res, next) => {
+    // res.sendStatus(200);
+    res.status(200).contentType("text/html").send(`
+      <!DOCTYPE html>
+      <html lang="fr">
+        <head>
+          <title>Ajout d'un élément</title>
+        </head>
+        <body>
+          <form method="post" id="form">
+            <select name="type" required>
+              <option value="S">Set</option>
+              <option value="M">Minifigure</option>
+            </select>
+            <input type="text" name="id" placeholder="ID" required />
+            <input type="submit" />
+          </form>
+          <script>
+            const form = document.getElementById("form");
+            form.addEventListener("submit", () => {
+              form.setAttribute("action", \`/element/\${form.elements["type"].value}/\${form.elements["id"].value}\`);
+            })
+          </script>
+        </body>
+      </html>
+    `);
+    next();
   });
 
   app.param("elementType", (_req, res, next, value) => {
