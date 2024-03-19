@@ -24,7 +24,7 @@ export function startWebServer(port: number) {
       <!DOCTYPE html>
       <html lang="fr">
         <head>
-          <title>Ajout d'un élément</title>
+          <title>Add element</title>
         </head>
         <body>
           <form method="post" id="form">

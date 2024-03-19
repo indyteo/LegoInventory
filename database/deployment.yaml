@@ -36,7 +36,7 @@ spec:
             - name: NEO4J_AUTH
               value: $(DB_USER)/$(DB_PASS)
             - name: NEO4J_PLUGINS
-              value: '["apoc"]'
+              value: '["apoc","graph-data-science"]'
       volumes:
         - name: lego4j-data-storage
           persistentVolumeClaim:

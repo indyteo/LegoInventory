@@ -74,7 +74,7 @@ export async function getCatalogItem(type: ElementType, id: string): Promise<Cat
 
   const name = root.getString("./font/b");
   const icon = root.getURL("./p/font/a/img/@src");
-  const image = `"https://www.bricklink.com/${type}L/${id}.jpg"`;
+  const image = `https://www.bricklink.com/${type}L/${id}.jpg`;
   const link = `https://www.bricklink.com/v2/catalog/catalogitem.page?${type}=${id}`;
   const source = root.getString("./form/p[.//text()=\"Source:\"]/font/text()");
   const instructions = type === "S" ? await getInstructions(legoIdFromBrickLinkId(id)) : null;

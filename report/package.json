@@ -2,13 +2,18 @@
   "name": "report",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "build/index.js",
   "scripts": {
+    "dev": "npx --env-file=.env tsx src/index.ts",
+    "lint": "npx tsc --noEmit src/index.ts",
+    "build": "node esbuild.js",
+    "start": "node --env-file=.env build/index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "indyteo",
   "license": "ISC",
   "devDependencies": {
+    "@types/node": "^20.11.30",
     "esbuild": "^0.20.1",
     "shared": "file:../shared",
     "tsx": "^4.7.1",
