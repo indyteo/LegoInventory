@@ -1,7 +1,7 @@
 import { Express, Request } from "express";
 import asyncHandler from "express-async-handler";
 import { Brick, Color, readDatabaseMany, Element, readDatabaseOne } from "shared";
-import { computePaginationParams, PaginationQuery } from "../pagination";
+import { computePaginationParams, PaginatedRequest } from "../pagination";
 
 interface BrickIdParams {
   brickId: string;
@@ -23,7 +23,7 @@ interface GetBrickResult {
 }
 
 export default function (app: Express): void {
-  app.get("/elements/bricks", asyncHandler(async (req: Request<any, any, any, PaginationQuery>, res, next) => {
+  app.get("/elements/bricks", asyncHandler(async (req: PaginatedRequest, res, next) => {
     const pagination = await computePaginationParams(req, "MATCH (b:Brick) RETURN count(b) AS total");
     if (pagination === null) {
       res.status(400).json({ error: "Invalid pagination parameters" });
@@ -45,7 +45,7 @@ export default function (app: Express): void {
     next();
   }));
 
-  app.get("/elements/bricks/:brickId", asyncHandler(async (req: Request<BrickIdParams, any, any, PaginationQuery>, res, next) => {
+  app.get("/elements/bricks/:brickId", asyncHandler(async (req: Request<BrickIdParams>, res, next) => {
     const id = req.params.brickId;
     const brick = await readDatabaseOne(tx => tx.run<GetBrickResult>(`
       MATCH (b:Brick { id: $id })
@@ -69,7 +69,7 @@ export default function (app: Express): void {
         ...part,
         element: {
           ...part.element.properties,
-          type: part.element.labels.includes("Set") ? "S" : "M",
+          type: part.element.labels.includes("Set") ? "S" : "M"
         },
         color: part.color?.properties ?? null
       }))

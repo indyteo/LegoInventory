@@ -1,7 +1,7 @@
 import { Express, Request } from "express";
 import asyncHandler from "express-async-handler";
 import { Brick, Color, Minifigure, Set, readDatabaseMany, readDatabaseOne } from "shared";
-import { computePaginationParams, PaginationQuery } from "../pagination";
+import { computePaginationParams, PaginatedRequest } from "../pagination";
 
 interface SetIdParams {
   setId: string;
@@ -27,7 +27,7 @@ interface GetSetResult {
 }
 
 export default function (app: Express): void {
-  app.get("/elements/sets", asyncHandler(async (req: Request<any, any, any, PaginationQuery>, res, next) => {
+  app.get("/elements/sets", asyncHandler(async (req: PaginatedRequest, res, next) => {
     const pagination = await computePaginationParams(req, "MATCH (s:Set) RETURN count(s) AS total");
     if (pagination === null) {
       res.status(400).json({ error: "Invalid pagination parameters" });
@@ -51,7 +51,7 @@ export default function (app: Express): void {
     next();
   }));
 
-  app.get("/elements/sets/:setId", asyncHandler(async (req: Request<SetIdParams, any, any, PaginationQuery>, res, next) => {
+  app.get("/elements/sets/:setId", asyncHandler(async (req: Request<SetIdParams>, res, next) => {
     const id = req.params.setId;
     const set = await readDatabaseOne(tx => tx.run<GetSetResult>(`
       MATCH (s:Set { id: $id })

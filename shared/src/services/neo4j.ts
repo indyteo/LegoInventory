@@ -46,6 +46,10 @@ export async function writeDatabase(runnable: (tx: ManagedTransaction) => Result
   });
 }
 
+export async function writeReadDatabase<T extends RecordShape>(runnable: (tx: ManagedTransaction) => Result<T>): Promise<Result<T>> {
+  return runInDatabaseSession(session => session.executeWrite(runnable));
+}
+
 export async function closeDatabaseDriver(): Promise<void> {
   await driver.close();
 }

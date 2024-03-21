@@ -90,7 +90,7 @@ export async function createCatalogItems(items: CatalogItem[]): Promise<Neo4jSta
         b.image = brick.image
       SET
         b.name = brick.name
-      CREATE (p:Part { id: apoc.create.uuid() }) // Part will receive a random ID
+      CREATE (p:Part { id: randomUUID() }) // Part will receive a random ID
       SET p.quantity = toInteger(brick.quantity)
       MERGE (b)-[:IS_PART]->(p)-[:OF_ELEMENT]->(e)
       WITH p, brick, b
@@ -115,7 +115,7 @@ export async function createCatalogItems(items: CatalogItem[]): Promise<Neo4jSta
         m.link = minifigure.link,
         m.icon = minifigure.icon,
         m.image = minifigure.image
-      CREATE (p:Part { id: apoc.create.uuid() }) // Part will receive a random ID
+      CREATE (p:Part { id: randomUUID() }) // Part will receive a random ID
       SET p.quantity = toInteger(minifigure.quantity)
       MERGE (m)-[:IS_PART]->(p)-[:OF_ELEMENT]->(e)
     }

@@ -1,7 +1,7 @@
 import { Express, Request } from "express";
 import asyncHandler from "express-async-handler";
 import { Brick, Color, Minifigure, Set, readDatabaseMany, readDatabaseOne } from "shared";
-import { computePaginationParams, PaginationQuery } from "../pagination";
+import { computePaginationParams, PaginatedRequest } from "../pagination";
 
 interface MinifigureIdParams {
   minifigureId: string;
@@ -26,7 +26,7 @@ interface GetMinifigureResult {
 }
 
 export default function (app: Express): void {
-  app.get("/elements/minifigures", asyncHandler(async (req: Request<any, any, any, PaginationQuery>, res, next) => {
+  app.get("/elements/minifigures", asyncHandler(async (req: PaginatedRequest, res, next) => {
     const pagination = await computePaginationParams(req, "MATCH (m:Minifigure) RETURN count(m) AS total");
     if (pagination === null) {
       res.status(400).json({ error: "Invalid pagination parameters" });
@@ -47,7 +47,7 @@ export default function (app: Express): void {
     next();
   }));
 
-  app.get("/elements/minifigures/:minifigureId", asyncHandler(async (req: Request<MinifigureIdParams, any, any, PaginationQuery>, res, next) => {
+  app.get("/elements/minifigures/:minifigureId", asyncHandler(async (req: Request<MinifigureIdParams>, res, next) => {
     const id = req.params.minifigureId;
     const minifigure = await readDatabaseOne(tx => tx.run<GetMinifigureResult>(`
       MATCH (m:Minifigure { id: $id })
