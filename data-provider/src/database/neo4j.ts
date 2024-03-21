@@ -68,9 +68,11 @@ export async function createCatalogItems(items: CatalogItem[]): Promise<Neo4jSta
     WITH e, item
     // Add label depending on item type
     CALL apoc.create.addLabels(e, [CASE item.type WHEN "S" THEN "Set" WHEN "M" THEN "Minifigure" END]) YIELD node
-    MATCH (c:Category { id: item.category })
-    MERGE (e)-[:IN_CATEGORY]->(c)
-    WITH e, item
+    CALL {
+      WITH e, item
+      MATCH (c:Category { id: item.category })
+      MERGE (e)-[:IN_CATEGORY]->(c)
+    }
     // Delete parts previously associated with element
     CALL {
       WITH e

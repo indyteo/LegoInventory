@@ -2,7 +2,7 @@ import express from "express";
 import cors from "cors";
 import { getPort } from "./config";
 import { logAfter, logBefore } from "./handlers/middlewares";
-import { setupBricksHandlers } from "./handlers";
+import { setupBricksHandlers, setupMinifiguresHandlers, setupSetsHandlers } from "./handlers";
 
 const port = getPort();
 const app = express();
@@ -15,6 +15,8 @@ app.get("/", (_req, res) => {
 });
 
 setupBricksHandlers(app);
+setupMinifiguresHandlers(app);
+setupSetsHandlers(app);
 
 app.use(logAfter);
 
