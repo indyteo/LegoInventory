@@ -54,3 +54,14 @@ export type PRODUCED_IN = Relationship<Neo4jID, {
   icon: string;
   image: string;
 }, "PRODUCED_IN">;
+
+export interface Path<N extends Node<Neo4jID> = Node<Neo4jID>, R extends Relationship<Neo4jID> = Relationship<Neo4jID>> {
+  start: N;
+  end: N;
+  segments: {
+    start: N;
+    relationship: R;
+    end: N;
+  }[];
+  length: number;
+}
