@@ -3,7 +3,10 @@ import logo from './logo.svg';
 import './App.css';
 import {Base} from "./Base";
 import {Brick} from "./Brick";
-
+import {BrowserRouter as Router, Link, Route, Routes} from "react-router-dom";
+import Inventory, {InventoryDetail} from "./Inventory";
+import Catalogue from "./Catalogue";
+import Home from "./Home";
 let element = {
   id:'str354',
   name:"une brique",
@@ -11,30 +14,30 @@ let element = {
   icon: "icon.png"
 }
 function App() {
-  const [bricks, setBricks] = useState([]);
-  useEffect(()=>{
-    fetch('/api/elements/bricks').then(res=>res.json()).then(setBricks);
-  },[])
-  return (
+
+
+    return (
     <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        {/*@ts-ignore*/}
-        {bricks.map(brick=><Brick key={brick.id} data={brick}/>)}
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+        <Router>
+            <header className="App-header">
+                <img src={logo} className="App-logo" alt="logo"/>
+            </header>
+                <div className="menubar">
+                    <ul className="menubar">
+                        <li className="menuitem"><Link to="/home">Home</Link></li>
+                        <li className="menuitem"><Link to="/inventory">Inventory</Link></li>
+                        <li className="menuitem"><Link to='/catalogue'>Catalogue</Link></li>
+                    </ul>
+                </div>
+                <Routes>
+                    <Route path="/home" element={<Home/>}/>
+                    <Route path="/inventory" element={<Inventory/>}/>
+                    <Route path="/catalogue" element={<Catalogue/>}/>
+                    <Route path="/inventory/details/:id" element={<Inventory/>}/>
+                </Routes>
+        </Router>
     </div>
-  );
+    );
 }
 
 

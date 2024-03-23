@@ -1,9 +1,11 @@
 .App {
   text-align: center;
+  background-color: #282c34;
+  height: 100%;
 }
 
 .App-logo {
-  height: 40vmin;
+  height: 35vmin;
   pointer-events: none;
 }
 
@@ -15,7 +17,7 @@
 
 .App-header {
   background-color: #282c34;
-  min-height: 100vh;
+  min-height: 30vh;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -23,11 +25,39 @@
   font-size: calc(10px + 2vmin);
   color: white;
 }
-
+.menubar {
+  background-color: #282c34;
+  min-height: 8vh;
+  display: flex;
+  width:100%;
+  align-content: center;
+  justify-content: center;
+}
+.menuitem {
+  width: 100%;
+  align-items: center;
+  font-size: calc(10px + 2vmin);
+  color: white;
+}
+ul{
+  list-style-type: none;
+}
 .App-link {
   color: #61dafb;
 }
-
+a:link {
+  text-decoration: none;
+}
+a:visited {
+  text-decoration: none;
+}
+a:hover {
+  text-decoration: none;
+  color:#61dafb;
+}
+a:active {
+  text-decoration: none;
+}
 @keyframes App-logo-spin {
   from {
     transform: rotate(0deg);

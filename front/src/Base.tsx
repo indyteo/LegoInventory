@@ -1,4 +1,5 @@
 import {useState} from "react";
+import {Link} from "react-router-dom";
 //element base qui contient img, name, link
 /*let element = {
     id:'str354',
@@ -13,15 +14,18 @@ interface BaseProps{
         name:string;
         link:string;
         icon:string;
+
     };
 }
 export function Base({data:{id,name,link,icon}}:BaseProps){
     return(
         <>
-            <a href={link} target="_blank"><h1 id={id}>{name}</h1></a>
+            <Link to={link} target="_blank"><h1 id={id}>{name}</h1></Link>
                 <img src={icon}/>
         </>
     )
 }
+
+
 
 
