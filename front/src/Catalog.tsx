@@ -120,7 +120,7 @@ export function CatalogBrick() {
       <div>
         <img src={brick.image} alt={brick.name} />
       </div>
-      <a href={brick.link} target="_blank">See on BrickLink.com</a>
+      <a href={brick.link} target="_blank" rel="noreferrer">See on BrickLink.com</a>
       <hr />
       {brick.colors.length > 0 && (
         <>
@@ -165,7 +165,7 @@ export function CatalogMinifigure() {
       <div>
         <img src={minifigure.image} alt={minifigure.name} />
       </div>
-      <a href={minifigure.link} target="_blank">See on BrickLink.com</a>
+      <a href={minifigure.link} target="_blank" rel="noreferrer">See on BrickLink.com</a>
       <hr />
       <div>Pieces: ({minifigure.pieces.reduce((total, part) => total + part.quantity, 0)})</div>
       <BricksList data={minifigure.pieces} />
@@ -199,7 +199,7 @@ export function CatalogSet() {
       <div>
         <img src={set.image} alt={set.name} />
       </div>
-      <a href={set.link} target="_blank">See on BrickLink.com</a>
+      <a href={set.link} target="_blank" rel="noreferrer">See on BrickLink.com</a>
       <hr />
       <div>Minifigures: ({set.minifigures.reduce((total, part) => total + part.quantity, 0)})</div>
       {set.minifigures.map(part => (

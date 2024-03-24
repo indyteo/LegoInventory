@@ -87,7 +87,7 @@ export default function Inventory() {
       <button onClick={addItem}>Add item</button>
       {inventory.content.map(item => (
         <div key={item.element.id}>
-          {item.element.type == "M" ? <Minifigure data={item.element} /> : <Set data={item.element} />}
+          {item.element.type === "M" ? <Minifigure data={item.element} /> : <Set data={item.element} />}
           <div>Quantity: {item.quantity}</div>
           <div>Since: {new Date(item.since.year, item.since.month - 1, item.since.day).toJSON().substring(0, 10)}</div>
           <button onClick={() => deleteItem(item.element.id)}>Delete item</button>
@@ -108,7 +108,7 @@ export function InventoryDetails({ type }: InventoryDetailsProps) {
 
   useEffect(() => {
     api<InventoryDetailsType[]>(`/inventories/${id}/${type}?page=${page}`).then(setDetails);
-  }, [ id, page ]);
+  }, [ type, id, page ]);
 
   if (details === undefined)
     return null;

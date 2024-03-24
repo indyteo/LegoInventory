@@ -15,7 +15,7 @@ export function Element({ data, type }: ElementProps) {
       <div>
         <img src={data.icon} alt={data.name} />
       </div>
-      <a href={data.link} target="_blank">See on BrickLink.com</a>
+      <a href={data.link} target="_blank" rel="noreferrer">See on BrickLink.com</a>
     </div>
   )
 }
@@ -26,7 +26,7 @@ export function Set({ data }: SetProps) {
   return (
     <div>
       <Element data={data} type="set" />
-      <a href={data.instructions} target="_blank">Instructions PDF</a>
+      <a href={data.instructions} target="_blank" rel="noreferrer">Instructions PDF</a>
     </div>
   );
 }
