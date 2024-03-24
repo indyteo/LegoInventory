@@ -45,9 +45,11 @@ async function main() {
   console.log("Generating report PDF...");
   const file = await generateReport();
   console.log(`PDF report "${file}" generated!`);
-  console.log("Uploading result on S3...");
-  await uploadFileToS3(file);
-  console.log("Result successfully uploaded!")
+  if (process.env.S3_ENDPOINT) {
+    console.log("Uploading result on S3...");
+    await uploadFileToS3(file);
+    console.log("Result successfully uploaded!")
+  }
   console.log("Closing Neo4j database driver...");
   await closeDatabaseDriver();
   console.log("Neo4j database driver closed!")
