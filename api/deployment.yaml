@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: api
-          image: lego-inventory/api
+          image: indyteo/lego-inventory-api
           imagePullPolicy: IfNotPresent
           env:
             - name: DB_URL

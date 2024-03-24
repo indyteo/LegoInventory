@@ -13,7 +13,7 @@ spec:
     spec:
       containers:
         - name: data-provider-init
-          image: lego-inventory/data-provider
+          image: indyteo/lego-inventory-data-provider
           imagePullPolicy: IfNotPresent
           env:
             - name: DB_URL

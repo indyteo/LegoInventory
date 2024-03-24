@@ -17,6 +17,6 @@ spec:
     spec:
       containers:
         - name: front
-          image: lego-inventory/front
+          image: indyteo/lego-inventory-front
           imagePullPolicy: IfNotPresent
       restartPolicy: Always
