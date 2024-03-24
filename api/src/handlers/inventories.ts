@@ -12,7 +12,7 @@ import {
   Minifigure,
   Brick,
   Color,
-  Set
+  Set, PRODUCED_IN
 } from "shared";
 import { computePaginationParams, PaginatedRequest } from "./pagination";
 
@@ -71,7 +71,8 @@ interface GetInventoryMinifiguresResult {
 
 interface GetInventoryBricksResult {
   b: Brick;
-  c: Color;
+  r?: PRODUCED_IN;
+  c?: Color;
   quantity: number;
   from: {
     element: Element["properties"]["id"];
@@ -233,11 +234,14 @@ export default function (app: Express): void {
         WITH b, c, m, r.quantity * p1.quantity * p2.quantity AS quantity
         RETURN b, c, sum(quantity) AS quantity, collect({ element: m.id, type: "M", quantity: quantity }) AS from
       }
-      RETURN b, c, sum(quantity) AS quantity, apoc.coll.flatten(collect(from)) AS from ORDER BY c.name, b.name SKIP toInteger($skip) LIMIT toInteger($limit)
+      WITH b, c, sum(quantity) AS quantity, apoc.coll.flatten(collect(from)) AS from ORDER BY c.name, b.name SKIP toInteger($skip) LIMIT toInteger($limit)
+      OPTIONAL MATCH (b)-[r:PRODUCED_IN]->(c)
+      RETURN b, r, c, quantity, from
     `, { id, limit, skip }));
     res.json(bricks.map(brick => ({
       ...brick.get("b").properties,
-      color: brick.get("c").properties,
+      ...brick.get("r")?.properties,
+      color: brick.get("c")?.properties || null,
       quantity: brick.get("quantity"),
       from: brick.get("from")
     })));
@@ -284,7 +288,7 @@ export default function (app: Express): void {
   app.delete("/inventories/:inventoryId/content/:elementId", asyncHandler(async (req: Request<InventoryIdAndElementIdParams, any, DeleteInventoryContent>, res, next) => {
     const inventoryId = req.params.inventoryId;
     const elementId = req.params.elementId;
-    const all = req.body.all;
+    const all = req.body.all ?? false;
     const stats = await writeDatabase(tx => tx.run(`
       MATCH (:Inventory { id: $inventoryId })<-[r:IN_INVENTORY]-(:Element { id: $elementId })
       SET r.quantity = CASE $all WHEN true THEN 0 ELSE r.quantity - 1 END

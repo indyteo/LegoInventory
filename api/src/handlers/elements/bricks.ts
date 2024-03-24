@@ -17,8 +17,11 @@ interface GetBrickResult {
   colors: Color[];
   isPartOf: {
     element: Element;
-    color: Color | null;
     quantity: number;
+    details: {
+      color: Color | null;
+      quantity: number;
+    }[];
   }[];
 }
 
@@ -54,8 +57,8 @@ export default function (app: Express): void {
       WITH b, collect(c) AS colors
       OPTIONAL MATCH (b)-[:IS_PART]->(p:Part)-[:OF_ELEMENT]->(e:Element)
       OPTIONAL MATCH (p)-[:WITH_COLOR]->(c:Color)
-      WITH b, colors, e, c, p ORDER BY e.name
-      RETURN b, colors, collect({ element: e, color: c, quantity: p.quantity }) AS isPartOf
+      WITH b, colors, e, sum(p.quantity) AS quantity, collect({ color: c, quantity: p.quantity }) AS details ORDER BY e.name
+      RETURN b, colors, collect({ element: e, quantity: quantity, details: details }) AS isPartOf
     `, { id }));
     if (brick === null) {
       res.status(404).json({ error: "Unknown brick" });
@@ -71,7 +74,10 @@ export default function (app: Express): void {
           ...part.element.properties,
           type: part.element.labels.includes("Set") ? "S" : "M"
         },
-        color: part.color?.properties ?? null
+        details: part.details.map(detail => ({
+          ...detail,
+          color: detail.color?.properties ?? null,
+        }))
       }))
     });
     next();

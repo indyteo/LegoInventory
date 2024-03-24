@@ -1,6 +1,6 @@
 import { Express, Request } from "express";
 import asyncHandler from "express-async-handler";
-import { Brick, Color, Minifigure, Set, readDatabaseMany, readDatabaseOne } from "shared";
+import { Brick, Color, Minifigure, Set, readDatabaseMany, readDatabaseOne, PRODUCED_IN } from "shared";
 import { computePaginationParams, PaginatedRequest } from "../pagination";
 
 interface MinifigureIdParams {
@@ -16,6 +16,7 @@ interface GetMinifigureResult {
   m: Minifigure;
   pieces: {
     brick: Brick;
+    r: PRODUCED_IN | null;
     color: Color | null;
     quantity: number;
   }[];
@@ -53,8 +54,9 @@ export default function (app: Express): void {
       MATCH (m:Minifigure { id: $id })
       OPTIONAL MATCH (m)<-[:OF_ELEMENT]-(p:Part)<-[:IS_PART]-(b:Brick)
       OPTIONAL MATCH (p)-[:WITH_COLOR]->(c:Color)
-      WITH m, p, b, c ORDER BY c.name, b.name
-      WITH m, collect({ brick: b, color: c, quantity: p.quantity }) AS pieces
+      OPTIONAL MATCH (b)-[r:PRODUCED_IN]->(c)
+      WITH m, p, b, r, c ORDER BY c.name, b.name
+      WITH m, collect({ brick: b, r: r, color: c, quantity: p.quantity }) AS pieces
       OPTIONAL MATCH (m)-[:IS_PART]->(p:Part)-[:OF_ELEMENT]-(s:Set)
       WITH m, pieces, p, s ORDER BY s.name
       RETURN m, pieces, collect({ set: s, quantity: p.quantity }) AS isPartOf
@@ -67,9 +69,9 @@ export default function (app: Express): void {
     res.json({
       ...minifigure.get("m").properties,
       pieces: minifigure.get("pieces").map(piece => ({
-        ...piece,
-        brick: piece.brick.properties,
-        color: piece.color?.properties ?? null
+        brick: { ...piece.brick.properties, ...piece.r?.properties },
+        color: piece.color?.properties ?? null,
+        quantity: piece.quantity
       })),
       isPartOf: minifigure.get("isPartOf").map(part => ({
         ...part,

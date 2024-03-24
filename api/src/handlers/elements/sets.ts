@@ -1,6 +1,6 @@
 import { Express, Request } from "express";
 import asyncHandler from "express-async-handler";
-import { Brick, Color, Minifigure, Set, readDatabaseMany, readDatabaseOne } from "shared";
+import { Brick, Color, Minifigure, Set, readDatabaseMany, readDatabaseOne, PRODUCED_IN } from "shared";
 import { computePaginationParams, PaginatedRequest } from "../pagination";
 
 interface SetIdParams {
@@ -21,6 +21,7 @@ interface GetSetResult {
   }[];
   pieces: {
     brick: Brick;
+    r: PRODUCED_IN | null;
     color: Color | null;
     quantity: number;
   }[];
@@ -61,8 +62,9 @@ export default function (app: Express): void {
       } AS minifigures
       OPTIONAL MATCH (s)<-[:OF_ELEMENT]-(p:Part)<-[:IS_PART]-(b:Brick)
       OPTIONAL MATCH (p)-[:WITH_COLOR]->(c:Color)
-      WITH s, minifigures, b, c, p ORDER BY c.name, b.name
-      RETURN s, minifigures, collect({ brick: b, color: c, quantity: p.quantity }) AS pieces
+      OPTIONAL MATCH (b)-[r:PRODUCED_IN]->(c)
+      WITH s, minifigures, b, r, c, p ORDER BY c.name, b.name
+      RETURN s, minifigures, collect({ brick: b, r: r, color: c, quantity: p.quantity }) AS pieces
     `, { id }));
     if (set === null) {
       res.status(404).json({ error: "Unknown set" });
@@ -76,9 +78,9 @@ export default function (app: Express): void {
         minifigure: minifigure.minifigure.properties
       })),
       pieces: set.get("pieces").map(piece => ({
-        ...piece,
-        brick: piece.brick.properties,
-        color: piece.color?.properties ?? null
+        brick: { ...piece.brick.properties, ...piece.r?.properties },
+        color: piece.color?.properties ?? null,
+        quantity: piece.quantity
       }))
     });
     next();
