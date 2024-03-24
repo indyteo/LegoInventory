@@ -1,9 +1,9 @@
 FROM node:lts-alpine AS build
 
 WORKDIR /app
-COPY front/package*.json ./
-RUN npm install
-COPY front .
+COPY /package*.json ./
+RUN npm install --legacy-peer-deps --verbose
+COPY . .
 RUN npm run build
 
 FROM nginx:stable-alpine-slim

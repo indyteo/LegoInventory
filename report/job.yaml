@@ -1,0 +1,54 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: report
+  labels:
+    app: report
+spec:
+  template:
+    metadata:
+      name: report
+      labels:
+        app: report
+    spec:
+      containers:
+        - name: report
+          image: lego-inventory/report
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: DB_URL
+              valueFrom:
+                secretKeyRef:
+                  name: lego4j-credentials
+                  key: url
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: lego4j-credentials
+                  key: user
+            - name: DB_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: lego4j-credentials
+                  key: pass
+            - name: S3_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: s3-credentials
+                  key: user
+            - name: S3_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: s3-credentials
+                  key: pass
+            - name: S3_ENDPOINT
+              valueFrom:
+                secretKeyRef:
+                  name: s3-credentials
+                  key: endpoint
+            - name: S3_REGION
+              valueFrom:
+                secretKeyRef:
+                  name: s3-credentials
+                  key: region
+      restartPolicy: Never

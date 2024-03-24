@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: s3
+  labels:
+    app: s3
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: s3
+  template:
+    metadata:
+      name: s3
+      labels:
+        app: s3
+    spec:
+      containers:
+        - name: s3
+          image: quay.io/minio/minio
+          imagePullPolicy: IfNotPresent
+          command:
+            - /bin/bash
+            - -c
+          args:
+            - minio server /data --console-address :9001
+          volumeMounts:
+            - mountPath: /data
+              name: s3-data-storage
+          env:
+            - name: MINIO_ROOT_USER
+              valueFrom:
+                secretKeyRef:
+                  name: s3-credentials
+                  key: user
+            - name: MINIO_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: s3-credentials
+                  key: pass
+            - name: MINIO_REGION
+              valueFrom:
+                secretKeyRef:
+                  name: s3-credentials
+                  key: region
+      volumes:
+        - name: s3-data-storage
+          persistentVolumeClaim:
+            claimName: s3-data-claim
+      restartPolicy: Always
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: s3-data-claim
+spec:
+  storageClassName: local-storage
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi

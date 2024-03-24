@@ -1,6 +1,16 @@
 **/node_modules/
 **/build/
+**/dist/
 **/.gitignore
 **/.env
-**/deployment.yml
+**/.env.example
+**/deployment.yaml
+**/service.yaml
+**/volume.yaml
+**/job.yaml
+**/secret.yaml
+**/secret.yaml.example
 **/README.md
+services.yaml
+gateaway.yaml
+link_prediction.cypher

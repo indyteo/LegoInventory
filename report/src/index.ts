@@ -9,6 +9,7 @@ import { writeBiggestSets } from "./pdf/sets";
 import { getBiggestSets } from "./database/sets";
 import { getGeneralStats } from "./database/stats";
 import { writeGeneralStats } from "./pdf/stats";
+import { uploadFileToS3 } from "./s3/minio";
 
 async function generateReport(): Promise<string> {
   const date = new Date().toJSON().substring(0, 10);
@@ -44,6 +45,9 @@ async function main() {
   console.log("Generating report PDF...");
   const file = await generateReport();
   console.log(`PDF report "${file}" generated!`);
+  console.log("Uploading result on S3...");
+  await uploadFileToS3(file);
+  console.log("Result successfully uploaded!")
   console.log("Closing Neo4j database driver...");
   await closeDatabaseDriver();
   console.log("Neo4j database driver closed!")
